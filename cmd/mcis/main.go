@@ -11,9 +11,9 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/mutou/montecarlo-ip-searcher/internal/output"
-	"github.com/mutou/montecarlo-ip-searcher/internal/probe"
-	"github.com/mutou/montecarlo-ip-searcher/internal/search"
+	"github.com/Leo-Mu/montecarlo-ip-searcher/internal/output"
+	"github.com/Leo-Mu/montecarlo-ip-searcher/internal/probe"
+	"github.com/Leo-Mu/montecarlo-ip-searcher/internal/search"
 )
 
 type repeatStringFlag []string

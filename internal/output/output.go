@@ -8,7 +8,7 @@ import (
 	"sort"
 	"strconv"
 
-	"github.com/mutou/montecarlo-ip-searcher/internal/search"
+	"github.com/Leo-Mu/montecarlo-ip-searcher/internal/search"
 )
 
 func WriteJSONL(w io.Writer, rows []search.TopResult) error {

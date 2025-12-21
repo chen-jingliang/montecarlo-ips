@@ -12,8 +12,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/mutou/montecarlo-ip-searcher/internal/cidr"
-	"github.com/mutou/montecarlo-ip-searcher/internal/probe"
+	"github.com/Leo-Mu/montecarlo-ip-searcher/internal/cidr"
+	"github.com/Leo-Mu/montecarlo-ip-searcher/internal/probe"
 )
 
 type Config struct {
