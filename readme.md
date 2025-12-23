@@ -14,7 +14,7 @@ go run ./cmd/mcis --budget 500 --concurrency 50 --heads 8 --beam 32 -v --out tex
 go run ./cmd/mcis --budget 2000 --concurrency 100 --heads 10 --beam 32 -v --out text --sni example.com --host-header example.com --cidr-file ./ipv6-cidr.txt
 ```
 
-[Release](https://github.com/Leo-Mu/montecarlo-ip-searcher/releases/latest) 用户下载解压后拖入终端，加入参数即可。
+[Release](https://github.com/Leo-Mu/montecarlo-ip-searcher/releases/latest) 用户下载解压后在文件夹中右键打开终端，并将程序拖入终端，加入参数即可。
 
 ```bash
  --budget 500 --concurrency 50 --heads 8 --beam 32 -v --out text --sni example.com --host-header example.com --cidr-file ./ipv4cidr.txt
