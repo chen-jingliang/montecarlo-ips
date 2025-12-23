@@ -21,7 +21,7 @@ go run ./cmd/mcis --budget 2000 --concurrency 100 --heads 10 --beam 32 -v --out 
 ```
 
 ```bash
- --budget 2000 --concurrency 100 --heads 8 --beam 32 -v --out text --sni example.com --host-header example.com --cidr-file ./ipv6-cidr.txt
+ --budget 2000 --concurrency 100 --heads 10 --beam 32 -v --out text --sni example.com --host-header example.com --cidr-file ./ipv6-cidr.txt
 ```
 
 注意，本项目使用的是 https 真返回测速，所以显示延迟会是其它工具的结果加上一个固定值，使用起来是一样的。使用你的网站作为 sni 和 host，可以保证优选出来的 ip 当前在你的区域一定对你的网站生效，如有特殊需求还可自定义 path。
