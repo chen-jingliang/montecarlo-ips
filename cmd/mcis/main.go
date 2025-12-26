@@ -8,6 +8,7 @@ import (
 	"net/netip"
 	"os"
 	"os/signal"
+	"sort"
 	"strings"
 	"syscall"
 	"time"
@@ -92,7 +93,7 @@ func main() {
 	flag.StringVar(&dnsToken, "dns-token", "", "DNS provider API token (or use CF_API_TOKEN/VERCEL_TOKEN env)")
 	flag.StringVar(&dnsZone, "dns-zone", "", "DNS zone ID (Cloudflare) or domain (Vercel) (or use CF_ZONE_ID env)")
 	flag.StringVar(&dnsSubdomain, "dns-subdomain", "", "Subdomain to update (e.g., 'cf' for cf.example.com)")
-	flag.IntVar(&dnsUploadCount, "dns-upload-count", 0, "Number of IPs to upload (default: same as --top)")
+	flag.IntVar(&dnsUploadCount, "dns-upload-count", 0, "Number of IPs to upload (default: same as --download-top)")
 	flag.StringVar(&dnsTeamID, "dns-team-id", "", "Vercel Team ID (optional, or use VERCEL_TEAM_ID env)")
 	flag.Parse()
 
@@ -179,6 +180,10 @@ func main() {
 			fmt.Fprintln(os.Stderr, "error: --dns-subdomain is required when --dns-provider is set")
 			os.Exit(1)
 		}
+		if dlTop <= 0 {
+			fmt.Fprintln(os.Stderr, "error: --download-top must be > 0 when using DNS upload")
+			os.Exit(1)
+		}
 
 		dnsCfg := dns.Config{
 			Provider:    dnsProvider,
@@ -195,27 +200,47 @@ func main() {
 			os.Exit(1)
 		}
 
+		// Collect IPs from download-tested results only (first dlTop entries)
+		// Filter for successful downloads and sort by download speed (Mbps, descending)
+		type dlResult struct {
+			IP   netip.Addr
+			Mbps float64
+		}
+		var candidates []dlResult
+		for i := 0; i < dlTop && i < len(res.Top); i++ {
+			r := res.Top[i]
+			if r.DownloadOK {
+				candidates = append(candidates, dlResult{IP: r.IP, Mbps: r.DownloadMbps})
+			}
+		}
+
+		// Sort by download speed (highest first)
+		sort.Slice(candidates, func(i, j int) bool {
+			return candidates[i].Mbps > candidates[j].Mbps
+		})
+
 		// Determine how many IPs to upload
 		uploadN := dnsCfg.UploadCount
 		if uploadN <= 0 {
-			uploadN = topN
+			uploadN = dlTop
 		}
-		if uploadN > len(res.Top) {
-			uploadN = len(res.Top)
+		if uploadN > len(candidates) {
+			uploadN = len(candidates)
 		}
 
-		// Collect IPs to upload (only successful ones)
+		// Collect IPs to upload
 		var ipsToUpload []netip.Addr
-		for i := 0; i < len(res.Top) && len(ipsToUpload) < uploadN; i++ {
-			if res.Top[i].OK {
-				ipsToUpload = append(ipsToUpload, res.Top[i].IP)
-			}
+		for i := 0; i < uploadN; i++ {
+			ipsToUpload = append(ipsToUpload, candidates[i].IP)
 		}
 
 		if len(ipsToUpload) > 0 {
 			if verbose {
-				fmt.Fprintf(os.Stderr, "dns: uploading %d IPs to %s (subdomain: %s)...\n",
+				fmt.Fprintf(os.Stderr, "dns: uploading %d IPs to %s (subdomain: %s), sorted by download speed...\n",
 					len(ipsToUpload), provider.Name(), dnsSubdomain)
+				for i, ip := range ipsToUpload {
+					fmt.Fprintf(os.Stderr, "  %d. %s (%.2f Mbps)\n", i+1, ip.String(), candidates[i].Mbps)
+				}
 			}
 			if err := dns.Upload(ctx, provider, dnsSubdomain, ipsToUpload, verbose); err != nil {
 				fmt.Fprintln(os.Stderr, "dns upload error:", err)
@@ -223,7 +248,7 @@ func main() {
 			}
 		} else {
 			if verbose {
-				fmt.Fprintln(os.Stderr, "dns: no successful IPs to upload")
+				fmt.Fprintln(os.Stderr, "dns: no successful download-tested IPs to upload")
 			}
 		}
 	}
